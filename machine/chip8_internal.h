@@ -4,7 +4,7 @@
 #include "chip8.h"
 #include "common.h"
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__WATCOMC__)
 #pragma pack(push,1)
 #endif
 
@@ -26,7 +26,7 @@ struct PACKED inst_field_t {
   u8  n;
 };
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__WATCOMC__)
 #pragma pack(pop)
 #endif
 

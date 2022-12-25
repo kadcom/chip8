@@ -2,7 +2,7 @@
 #define CHIP8_TYPES_H
 
 /* compatibility with older msvc */
-#if defined(_MSC_VER) && (_MSC_VER <= 1200)
+#if defined(_MSC_VER) && (_MSC_VER <= 1400)
 
 #ifndef inline 
 #define inline __inline
@@ -14,7 +14,7 @@
 
 #endif
 
-#if defined(_MSC_VER) && defined(WIN32)
+#if (defined(_MSC_VER) || defined(__WATCOMC__)) && (defined(WIN32) || defined(_WIN32))
 #include <windows.h>
 typedef unsigned __int8  u8;
 typedef unsigned __int16 u16;

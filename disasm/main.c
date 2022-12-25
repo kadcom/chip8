@@ -10,7 +10,6 @@ int main(int argc, char **argv) {
   size_t linesz = sizeof(line);
   size_t bufsz;
   u16 addr;
-  int res;
 	struct machine_t machine;
   FILE *f = NULL;
 
