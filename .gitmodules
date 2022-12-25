@@ -1,3 +1,9 @@
 [submodule "check"]
 	path = check
 	url = https://github.com/libcheck/check.git
+[submodule "adopt"]
+	path = adopt
+	url = https://github.com/ethomson/adopt.git
+[submodule "roms"]
+	path = roms
+	url = https://github.com/kripod/chip8-roms.git

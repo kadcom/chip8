@@ -8,6 +8,7 @@ enum {
   chip8_err_unknown = -1,
   chip8_err_invalid_instruction = -2,
   chip8_err_invalid_program = -3,
+  chip8_err_unimplemented = -4,
 };
 
 #endif

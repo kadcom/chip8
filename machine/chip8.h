@@ -53,6 +53,9 @@ typedef u16 inst_t;
 
 int init_machine(struct machine_t *m);
 int load_machine(struct machine_t *m, void *program, size_t program_length);
+int disasm_pc(struct machine_t *m, char *buf, size_t buf_len);
+int disasm_addr(struct machine_t *m, u16 addr, char *buf, size_t buf_len);
+int fetch_and_execute(struct machine_t *m); 
 
 typedef int(draw_cb_t)(struct machine_t *);
 int register_drawing_function(struct machine_t *m, draw_cb_t draw_cb_fn);
