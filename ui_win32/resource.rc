@@ -1,0 +1,40 @@
+#include <windows.h>
+#include "resource.h"
+
+
+// Dialog for About command
+IDD_ABOUT DIALOGEX 0, 0, 240, 120
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About Chip8 Emulator"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,180,100,50,14
+    CTEXT           "Chip8 Emulator",IDC_STATIC,60,10,120,20,SS_CENTERIMAGE
+    CTEXT           "Copyright 2022",IDC_STATIC,60,30,120,20,SS_CENTERIMAGE
+    CTEXT           "A program for emulating the Chip8 system",IDC_STATIC,60,50,120,20,SS_CENTERIMAGE
+//    ICON            IDI_ICON1,IDC_STATIC,10,10,50,50
+END
+
+// Menu
+IDM_MAIN_MENU MENU
+BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "&Open\tCtrl+O", ID_FILE_OPEN
+        MENUITEM "&Close\tCtrl+C", ID_FILE_CLOSE
+        MENUITEM SEPARATOR
+        MENUITEM "E&xit\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "&Tools"
+    BEGIN
+        MENUITEM "&Disassembler\tCtrl+D", ID_TOOLS_DISASSEMBLER
+        MENUITEM "&Memory Map\tCtrl+M", ID_TOOLS_MEMORY_MAP
+    END
+
+    POPUP "&Help"
+    BEGIN
+        MENUITEM "&About...", ID_HELP_ABOUT
+    END
+END
+

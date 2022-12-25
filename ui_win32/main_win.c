@@ -2,6 +2,7 @@
 #include "chip8.h"
 #include "chip8_errors.h"
 #include "render.h"
+#include "resource.h"
 
 #define fb_width  64
 #define fb_height 32
@@ -22,6 +23,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   HBRUSH black_brush = (HBRUSH) GetStockObject(BLACK_BRUSH);
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
   HCURSOR arrow_cursor = LoadCursor(instance, IDC_ARROW);
+  HMENU main_menu = LoadMenu(instance, MAKEINTRESOURCE(IDM_MAIN_MENU));
 
   ZeroMemory(&wcex, sizeof(WNDCLASSEX));
   ZeroMemory(&msg, sizeof(MSG));
@@ -35,6 +37,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   wcex.hbrBackground = black_brush;
   wcex.lpszClassName = window_class;
   wcex.lpfnWndProc = main_window_proc;
+  wcex.lpszMenuName = MAKEINTRESOURCE(IDM_MAIN_MENU);
   wcex.cbWndExtra  = sizeof(struct render_t *);
 
   res = RegisterClassEx(&wcex); 

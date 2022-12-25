@@ -14,5 +14,5 @@ add_subdirectory(machine)
 add_subdirectory(disasm)
 
 if (WIN32)
-  add_subdirectory(win32)
+  add_subdirectory(ui_win32)
 endif (WIN32)

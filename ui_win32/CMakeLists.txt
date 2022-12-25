@@ -2,7 +2,7 @@
 enable_language(C)
 enable_language(RC)
 
-set(SOURCE_FILES main_win.c render_ddraw.c resources.rc)
+set(SOURCE_FILES main_win.c render_ddraw.c resource.rc)
 
 add_executable(chip8 WIN32 ${SOURCE_FILES})
 target_link_libraries(chip8 ddraw)
