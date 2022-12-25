@@ -2,7 +2,6 @@
 #define CHIP8_ERRORS_H
 
 #define chip8_failed(x) ((x) != 0)
-#define chip8_success(x) ((x) == 0)
 
 enum {
   chip8_success = 0,

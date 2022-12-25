@@ -56,3 +56,65 @@ static int execute_field(struct machine_t *m, struct inst_field_t field, chip8_c
   return ret;
 }
 
+/* From here onwards it's the interpreter code */
+extern draw_cb_t draw_cb_fn;
+
+static int clear_screen(struct machine_t *m, UNUSED struct inst_field_t f) {
+  UNUSED_PARAM(f);
+
+  memset(m->display, 0, 32 * sizeof(u64));
+  return chip8_success;
+};
+
+static int jump(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.PC = f.nnn;
+  return chip8_success;
+};
+
+static int set_register(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.x] = f.kk;
+  return chip8_success;
+}
+
+static int add_to_register(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.x] += f.kk;
+  return chip8_success;
+}
+
+static int set_index_register(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.I = f.nnn;
+  return chip8_success;
+}
+
+static int draw(struct machine_t *m, struct inst_field_t f) {
+#define sprite_line_count 15
+  u8 sprite[sprite_line_count] = {0}; /* 40 byte sprite */
+  u32 i; 
+  u64 old_line, line, sprite_line; //scanline
+  u8 x, y, ny;
+
+  if (f.suffix > sizeof(sprite)) {
+    return chip8_err_invalid_instruction;
+  }
+  memcpy(sprite, &m->memory[m->cpu.I], f.suffix);
+
+  x = m->cpu.V[f.x];
+  y = m->cpu.V[f.y];
+
+  for (i = 0; i < sprite_line_count; ++i) {
+    sprite_line = ROTR64(sprite[i], x); // wrap x
+    
+    ny = (y + i) % 32; // wrap y
+
+    old_line = m->display[ny];
+    line = old_line ^ sprite_line;
+    
+    m->display[y] = line;
+
+    // check if any bit in line flipped from 1 to 0
+    m->cpu.VF = ((line & old_line) == old_line);
+  }
+  return chip8_success;
+};
+
+

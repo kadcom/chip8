@@ -53,4 +53,7 @@ typedef u16 inst_t;
 
 int init_machine(struct machine_t *m);
 int load_machine(struct machine_t *m, void *program, size_t program_length);
+
+typedef int(draw_cb_t)(struct machine_t *);
+int register_drawing_function(struct machine_t *m, draw_cb_t draw_cb_fn);
 #endif
