@@ -32,6 +32,6 @@ struct PACKED inst_field_t {
 
 #define ROTR64(v,n) ((v) >> (n) | (v) << (64 - (n)))
 
-typedef int (* CHIP8_CALLBACK chip8_callback_t)(struct machine_t*, struct inst_field_t);
+typedef int (CHIP8_CALLBACK *chip8_callback_t)(struct machine_t*, struct inst_field_t);
 extern draw_cb_t draw_cb_fn;
 #endif

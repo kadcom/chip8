@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "chip8.h"
-#include "chip8_internal.h"
+#include <chip8.h>
+#include <chip8_internal.h>
 
 int main(int argc, char **argv) {
   void *buf;
@@ -11,16 +11,15 @@ int main(int argc, char **argv) {
   size_t bufsz;
   u16 addr;
   int res;
+	struct machine_t machine;
+  FILE *f = NULL;
 
   if (argc < 2) {
     printf("Usage: %s [ROM file]\n", argv[0]);
     return -1;
   }
 
-
-  struct machine_t machine;
-
-  FILE *f = fopen(argv[1], "rb+");
+  f = fopen(argv[1], "rb+");
   fseek(f, 0, SEEK_END);
   bufsz = ftell(f);
   fseek(f, 0, SEEK_SET);

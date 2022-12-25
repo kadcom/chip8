@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.0)
 project(chip8) 
 
 
-add_subdirectory(check)
-add_subdirectory(adopt)
+# add_subdirectory(check)
+# add_subdirectory(adopt)
 
 include_directories(.)
 

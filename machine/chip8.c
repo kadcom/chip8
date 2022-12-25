@@ -131,34 +131,34 @@ int disasm_pc(struct machine_t *m, char *buf, size_t buf_len) {
 /* From here onwards it's the interpreter code */
 extern draw_cb_t draw_cb_fn;
 
-static CHIP8_CALLBACK int clear_screen(struct machine_t *m, UNUSED struct inst_field_t f) {
+static int CHIP8_CALLBACK clear_screen(struct machine_t *m, UNUSED struct inst_field_t f) {
   UNUSED_PARAM(f);
 
   memset(m->display, 0, 32 * sizeof(u64));
   return chip8_success;
 };
 
-static CHIP8_CALLBACK int jump(struct machine_t *m, struct inst_field_t f) {
+static int CHIP8_CALLBACK jump(struct machine_t *m, struct inst_field_t f) {
   m->cpu.PC = f.nnn;
   return chip8_success;
 };
 
-static CHIP8_CALLBACK int set_register(struct machine_t *m, struct inst_field_t f) {
+static int CHIP8_CALLBACK set_register(struct machine_t *m, struct inst_field_t f) {
   m->cpu.V[f.x] = f.kk;
   return chip8_success;
 }
 
-static CHIP8_CALLBACK int add_to_register(struct machine_t *m, struct inst_field_t f) {
+static int CHIP8_CALLBACK add_to_register(struct machine_t *m, struct inst_field_t f) {
   m->cpu.V[f.x] += f.kk;
   return chip8_success;
 }
 
-static CHIP8_CALLBACK int set_index_register(struct machine_t *m, struct inst_field_t f) {
+static int CHIP8_CALLBACK set_index_register(struct machine_t *m, struct inst_field_t f) {
   m->cpu.I = f.nnn;
   return chip8_success;
 }
 
-static CHIP8_CALLBACK int draw(struct machine_t *m, struct inst_field_t f) {
+static int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
 #define sprite_line_count 15
   u8 sprite[sprite_line_count] = {0}; /* 40 byte sprite */
   u32 i; 
@@ -176,7 +176,7 @@ static CHIP8_CALLBACK int draw(struct machine_t *m, struct inst_field_t f) {
   for (i = 0; i < sprite_line_count; ++i) {
     sprite_line = ROTR64(sprite[i], x); // wrap x
     
-    ny = (y + i) % 32; // wrap y
+    ny = (y + (u8)i) % 32; // wrap y
 
     old_line = m->display[ny];
     line = old_line ^ sprite_line;
@@ -189,7 +189,7 @@ static CHIP8_CALLBACK int draw(struct machine_t *m, struct inst_field_t f) {
   return chip8_success;
 };
 
-static CHIP8_CALLBACK int unimplemented(UNUSED struct machine_t *m, UNUSED struct inst_field_t f) {
+static int CHIP8_CALLBACK unimplemented(UNUSED struct machine_t *m, UNUSED struct inst_field_t f) {
   UNUSED_PARAM(m);
   UNUSED_PARAM(f);
 
@@ -211,11 +211,10 @@ static chip8_callback_t callbacks[] =
 int fetch_and_execute(struct machine_t *m) {
   inst_t inst;
   struct inst_field_t df;
+	chip8_callback_t cb;
 
   fetch(m, &inst);
   decode(inst, &df);
-
-  chip8_callback_t cb;
 
   if (df.prefix == 0x0) {
       switch (df.lo) {
