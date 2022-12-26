@@ -9,7 +9,7 @@
 #define fb_width  64
 #define fb_height 32
 
-#define default_scale 8
+#define default_scale 10
 
 static char window_class[] = "MainWindowClass";
 
@@ -24,6 +24,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   HWND main_window;
   BOOL res;
   int border, menu;
+  //u64 one = 0x1ul;
 
   HBRUSH black_brush = (HBRUSH) GetStockObject(BLACK_BRUSH);
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
@@ -84,6 +85,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   if (chip8_failed(initialise_renderer(renderer, main_window, fb_width * default_scale, fb_height * default_scale))) {
     goto cleanup;
   }
+
+  // check display 
+  // machine.display[0] = one;
+  // machine.display[1] = (one << 32);
 
   ShowWindow(main_window, show_state);
   UpdateWindow(main_window);

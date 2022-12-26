@@ -134,16 +134,19 @@ int destroy_renderer(struct render_t *r) {
 };
 
 #define scale 10
+#define red_pixel 0xFFFF0000
+
 static void draw_square(u8 *data, int pitch, int x, int y) {
-  int offset = y * pitch + x * 4; 
-  int total = scale * scale; 
-  int i;
-  static u8 red_pixel[4]= {0xFF, 0x00, 0x00, 0xFF};
+  int i, offset;
+  u32 *pixel;
+  u32 bit_per_pixel = 32;
 
-  for (i = 0; i < total; ++i) {
-    memcpy(data, red_pixel, 4);
-
-    offset += pitch;
+  // Draw the square of pixels
+  for (i = 0; i < scale * scale; i++) {
+    // Calculate the pixel offset
+    offset = (y + i / scale) * pitch + (x + i % scale) * (bit_per_pixel / 8);
+    pixel = (u32*)(data + offset);
+    *pixel = red_pixel;
   }
 }
 
@@ -154,8 +157,7 @@ void draw_bitmap(u8* data, int pitch, u64* bitmap)
   u64 n = 1;
 
   // Draw the Chip-8 bitmap
-  for (y = 0; y < 32; y++)
-  {
+  for (y = 0; y < 32; y++) {
     // Get the current row of the bitmap
     row = bitmap[y];
 
