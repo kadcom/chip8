@@ -3,6 +3,15 @@
 // Used by resource.rc
 //
 #define IDM_MAIN_MENU                   101
+
+#ifndef ID_FILE_OPEN 
+#define ID_FILE_OPEN 40001 
+#endif 
+
+#ifndef ID_FILE_CLOSE
+#define ID_FILE_CLOSE 40002 
+#endif
+
 #define ID_FILE_EXIT                    40003
 #define ID_TOOLS_DEBUGGER               40004
 #define ID_TOOLS_MEMORYMAP              40005

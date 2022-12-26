@@ -54,7 +54,7 @@ int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
     m->display[y] = line;
 
     // check if any bit in line flipped from 1 to 0
-    m->cpu.VF = ((line & old_line) == old_line) & 0x1;
+    m->cpu.VF = ((old_line & line) == line)  && ((sprite_line & line) == 0);
   }
   return chip8_success;
 };
