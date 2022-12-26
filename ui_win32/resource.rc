@@ -66,6 +66,16 @@ BEGIN
         MENUITEM "&Disassembler",               ID_TOOLS_DEBUGGER
         MENUITEM "&Memory Map",                 ID_TOOLS_MEMORYMAP
     END
+    POPUP "&Diagnostics"
+    BEGIN
+        POPUP "Frame Buffer"
+        BEGIN
+            MENUITEM "Clear Framebuffer",           ID_DIAGNOSTICS_FRAMEBUFFER_CLEARFRAMEBUFFER
+
+            MENUITEM "&Checkered Pattern",          ID_DIAGNOSTICS_CHECKEREDPATTERN
+
+        END
+    END
     POPUP "&Help", HELP
     BEGIN
         MENUITEM "&About",                      ID_HELP_ABOUT

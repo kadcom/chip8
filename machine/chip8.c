@@ -27,10 +27,6 @@ static u8 fonts[] = {
 
 static u16 program_base_addr = 0x200;
 
-static inline u16 flip_endian(u16 x) {
-  return (x >> 8) | (x << 8);
-}
-
 int init_machine(struct machine_t *m) {
   memset(m, 0, sizeof(struct machine_t));
   
@@ -58,7 +54,7 @@ static int fetch(struct machine_t *m, inst_t *instruction) {
 static int decode(inst_t instruction, struct inst_field_t *field) {
 
   // flip the endian for little endian
-  u16 inst = flip_endian(instruction);
+  u16 inst = FLIP_ENDIANNESS_16(instruction);
 
   field->inst = inst;
 
@@ -126,74 +122,6 @@ int disasm_pc(struct machine_t *m, char *buf, size_t buf_len) {
   inst_t inst;
   fetch(m, &inst);
   return disasm_inst(inst, buf, buf_len);
-};
-
-/* From here onwards it's the interpreter code */
-extern draw_cb_t draw_cb_fn;
-
-static int CHIP8_CALLBACK clear_screen(struct machine_t *m, UNUSED struct inst_field_t f) {
-  UNUSED_PARAM(f);
-
-  memset(m->display, 0, 32 * sizeof(u64));
-  return chip8_success;
-};
-
-static int CHIP8_CALLBACK jump(struct machine_t *m, struct inst_field_t f) {
-  m->cpu.PC = f.nnn;
-  return chip8_success;
-};
-
-static int CHIP8_CALLBACK set_register(struct machine_t *m, struct inst_field_t f) {
-  m->cpu.V[f.x] = f.kk;
-  return chip8_success;
-}
-
-static int CHIP8_CALLBACK add_to_register(struct machine_t *m, struct inst_field_t f) {
-  m->cpu.V[f.x] += f.kk;
-  return chip8_success;
-}
-
-static int CHIP8_CALLBACK set_index_register(struct machine_t *m, struct inst_field_t f) {
-  m->cpu.I = f.nnn;
-  return chip8_success;
-}
-
-static int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
-#define sprite_line_count 15
-  u8 sprite[sprite_line_count] = {0}; /* 40 byte sprite */
-  u32 i; 
-  u64 old_line, line, sprite_line; //scanline
-  u8 x, y, ny;
-
-  if (f.n > sizeof(sprite)) {
-    return chip8_err_invalid_instruction;
-  }
-  memcpy(sprite, &m->memory[m->cpu.I], f.n);
-
-  x = m->cpu.V[f.x];
-  y = m->cpu.V[f.y];
-
-  for (i = 0; i < sprite_line_count; ++i) {
-    sprite_line = ROTR64(sprite[i], x); // wrap x
-    
-    ny = (y + (u8)i) % 32; // wrap y
-
-    old_line = m->display[ny];
-    line = old_line ^ sprite_line;
-    
-    m->display[y] = line;
-
-    // check if any bit in line flipped from 1 to 0
-    m->cpu.VF = ((line & old_line) == old_line) & 0x1;
-  }
-  return chip8_success;
-};
-
-static int CHIP8_CALLBACK unimplemented(UNUSED struct machine_t *m, UNUSED struct inst_field_t f) {
-  UNUSED_PARAM(m);
-  UNUSED_PARAM(f);
-
-  return chip8_err_unimplemented;
 };
 
 static chip8_callback_t callbacks[] = 

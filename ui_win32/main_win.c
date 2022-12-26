@@ -6,6 +6,8 @@
 #include "render.h"
 #include "resource.h"
 
+#include "diagnostics.h"
+
 #define fb_width  64
 #define fb_height 32
 
@@ -40,7 +42,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   HWND main_window;
   BOOL res;
   int border, menu;
-  u64 one = 0x0100000000000001;
 
   HBRUSH black_brush = (HBRUSH) GetStockObject(BLACK_BRUSH);
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
@@ -103,9 +104,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
     goto cleanup;
   }
 
-  // check display 
-  machine.display[0] = one;
-
+  // diag_checkered(&machine);
+  
   ShowWindow(main_window, show_state);
   UpdateWindow(main_window);
 
@@ -118,7 +118,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     } else {
-      fetch_and_execute(&machine);
+      // fetch_and_execute(&machine);
       if (renderer) {
         render_display(renderer, &machine);
       }
@@ -171,6 +171,18 @@ static LRESULT on_paint(HWND window) {
 LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message)
   {
+    case WM_COMMAND: 
+      switch (LOWORD(wParam)) {
+        case ID_DIAGNOSTICS_CHECKEREDPATTERN:
+          diag_checkered(&machine);
+          break;
+        case ID_DIAGNOSTICS_FRAMEBUFFER_CLEARFRAMEBUFFER:
+          diag_clear(&machine);
+          break;
+        default:
+          return FALSE;
+      };
+      break;
     case WM_CLOSE: 
       return on_close(window);
       break;
