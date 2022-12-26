@@ -134,6 +134,8 @@ int destroy_renderer(struct render_t *r) {
 };
 
 #define scale 10
+#define fb_height 32 
+#define fb_width 64
 #define red_pixel 0xFFFF0000
 
 static void draw_square(u8 *data, int pitch, int x, int y) {
@@ -150,19 +152,19 @@ static void draw_square(u8 *data, int pitch, int x, int y) {
   }
 }
 
-void draw_bitmap(u8* data, int pitch, u64* bitmap)
+static void draw_bitmap(u8* data, int pitch, u64* bitmap)
 {
   int x, y, px, py;
   u64 row;
   u64 n = 1;
 
   // Draw the Chip-8 bitmap
-  for (y = 0; y < 32; y++) {
+  for (y = 0; y < fb_height; y++) {
     // Get the current row of the bitmap
     row = FLIP_ENDIANNESS_64(bitmap[y]);
 
     // Draw the row of the bitmap
-    for (x = 0; x < 64; x++)
+    for (x = 0; x < fb_width; x++)
     {
       // Check if the pixel is set
       if (row & (n << x))
@@ -178,12 +180,24 @@ void draw_bitmap(u8* data, int pitch, u64* bitmap)
   }
 }
 
+static void clear_surface(IDirectDrawSurface *surface) {
+  DDBLTFX ftx; 
+  ZeroMemory(&ftx, sizeof(DDBLTFX));
+
+  ftx.dwFillColor = 0xFF0000FF;
+
+  IDirectDrawSurface_Blt(surface, NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ftx);
+}
+
 int render_display(struct render_t *renderer, struct machine_t *machine) {
   DDSURFACEDESC ddsd;
   HRESULT hr;
   int pitch;
   u8 *data;
   RECT rect; 
+
+  /* Clear Back Buffer */
+  clear_surface(renderer->back);
 
   /* Draw to Back Buffer */
   ZeroMemory(&ddsd, sizeof(DDSURFACEDESC));
@@ -196,6 +210,8 @@ int render_display(struct render_t *renderer, struct machine_t *machine) {
 
   pitch = ddsd.lPitch;
   data = (u8*)ddsd.lpSurface;
+
+  ZeroMemory(data, pitch * fb_width * scale);
 
   draw_bitmap(data, pitch, machine->display);
 

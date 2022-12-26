@@ -118,7 +118,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     } else {
-      // fetch_and_execute(&machine);
+      fetch_and_execute(&machine);
       if (renderer) {
         render_display(renderer, &machine);
       }
