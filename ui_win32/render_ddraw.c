@@ -147,10 +147,11 @@ static void draw_square(u8 *data, int pitch, int x, int y) {
   }
 }
 
-void draw_bitmap(u8* data, int pitch, uint64_t* bitmap)
+void draw_bitmap(u8* data, int pitch, u64* bitmap)
 {
   int x, y, px, py;
-  u64 row; 
+  u64 row;
+  u64 n = 1;
 
   // Draw the Chip-8 bitmap
   for (y = 0; y < 32; y++)
@@ -162,7 +163,7 @@ void draw_bitmap(u8* data, int pitch, uint64_t* bitmap)
     for (x = 0; x < 64; x++)
     {
       // Check if the pixel is set
-      if (row & (1ull << x))
+      if (row & (n << x))
       {
         // Calculate the pixel position
         px = x * scale;

@@ -128,7 +128,7 @@ static LRESULT on_close(HWND window) {
       SetWindowLongPtr(window, 0, (LONG_PTR) renderer);
     };
 
-    DestroyWindow(window);
+    PostQuitMessage(0);
   }
 
   return FALSE;
@@ -149,14 +149,9 @@ static LRESULT on_paint(HWND window) {
 LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message)
   {
-    //case WM_PAINT:
-    //return on_paint(window);
     case WM_CLOSE: 
       return on_close(window);
       break;
-    case WM_DESTROY: 
-      PostQuitMessage(0);
-      break; 
     default:
       return DefWindowProc(window, message, wParam, lParam);
   }
