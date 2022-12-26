@@ -184,7 +184,8 @@ static void clear_surface(IDirectDrawSurface *surface) {
   DDBLTFX ftx; 
   ZeroMemory(&ftx, sizeof(DDBLTFX));
 
-  ftx.dwFillColor = 0xFF0000FF;
+  ftx.dwSize = sizeof(DDBLTFX);
+  ftx.dwFillColor = 0x00000000u;
 
   IDirectDrawSurface_Blt(surface, NULL, NULL, NULL, DDBLT_WAIT | DDBLT_COLORFILL, &ftx);
 }
@@ -210,9 +211,6 @@ int render_display(struct render_t *renderer, struct machine_t *machine) {
 
   pitch = ddsd.lPitch;
   data = (u8*)ddsd.lpSurface;
-
-  ZeroMemory(data, pitch * fb_width * scale);
-
   draw_bitmap(data, pitch, machine->display);
 
   IDirectDrawSurface_Unlock(renderer->back, data);

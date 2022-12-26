@@ -110,13 +110,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   UpdateWindow(main_window);
 
   for(;;) {
-    if (PeekMessage(&msg, main_window, 0, 0, PM_REMOVE)) {
+    if (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
       if (msg.message == WM_QUIT) {
         break;
       }
 
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
+      if (GetMessage(&msg, main_window, 0, 0) > 0) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
     } else {
       fetch_and_execute(&machine);
       if (renderer) {
@@ -147,11 +149,10 @@ static LRESULT on_close(HWND window) {
     if (renderer) {
       destroy_renderer(renderer);
       renderer = NULL; 
-      SetWindowLongPtr(window, 0, (LONG_PTR) renderer);
     };
-
-    PostQuitMessage(0);
   }
+
+  DestroyWindow(window);
 
   return FALSE;
 }
@@ -182,6 +183,9 @@ LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPAR
         default:
           return FALSE;
       };
+      break;
+    case WM_DESTROY:
+      PostQuitMessage(0);
       break;
     case WM_CLOSE: 
       return on_close(window);
