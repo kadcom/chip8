@@ -96,13 +96,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
 
       TranslateMessage(&msg);
       DispatchMessage(&msg);
-      continue;
-    }
-
-    // if not handling message do this 
-    // check for zero if the window is destroyed
-    if (renderer) {
-      render_display(renderer, &machine);
+    } else {
+      if (renderer) {
+        render_display(renderer, &machine);
+      }
     }
   }
 
@@ -153,7 +150,7 @@ LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPAR
   switch (message)
   {
     //case WM_PAINT:
-      //return on_paint(window);
+    //return on_paint(window);
     case WM_CLOSE: 
       return on_close(window);
       break;
