@@ -24,7 +24,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   HWND main_window;
   BOOL res;
   int border, menu;
-  //u64 one = 0x1ul;
+  u64 one = 0x0100000000000001;
 
   HBRUSH black_brush = (HBRUSH) GetStockObject(BLACK_BRUSH);
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
@@ -87,8 +87,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   }
 
   // check display 
-  // machine.display[0] = one;
-  // machine.display[1] = (one << 32);
+  machine.display[0] = one;
 
   ShowWindow(main_window, show_state);
   UpdateWindow(main_window);
