@@ -1,6 +1,7 @@
 #include "chip8_errors.h"
 #include "render.h"
 #include <ddraw.h>
+
 struct render_t {
   HANDLE wnd;
 
@@ -132,6 +133,79 @@ int destroy_renderer(struct render_t *r) {
   return chip8_success;
 };
 
+#define scale 10
+static void draw_square(u8 *data, int pitch, int x, int y) {
+  int offset = y * pitch + x * 4; 
+  int total = scale * scale; 
+  int i;
+  static u8 red_pixel[4]= {0xFF, 0x00, 0x00, 0xFF};
+
+  for (i = 0; i < total; ++i) {
+    memcpy(data, red_pixel, 4);
+
+    offset += pitch;
+  }
+}
+
+void draw_bitmap(u8* data, int pitch, uint64_t* bitmap)
+{
+  int x, y, px, py;
+  u64 row; 
+
+  // Draw the Chip-8 bitmap
+  for (y = 0; y < 32; y++)
+  {
+    // Get the current row of the bitmap
+    row = bitmap[y];
+
+    // Draw the row of the bitmap
+    for (x = 0; x < 64; x++)
+    {
+      // Check if the pixel is set
+      if (row & (1ull << x))
+      {
+        // Calculate the pixel position
+        px = x * scale;
+        py = y * scale;
+
+        // Draw the square of pixels
+        draw_square(data, pitch, px, py);
+      }
+    }
+  }
+}
+
 int render_display(struct render_t *renderer, struct machine_t *machine) {
-  return chip8_err_unimplemented;
+  DDSURFACEDESC ddsd;
+  HRESULT hr;
+  int pitch;
+  u8 *data;
+  RECT rect; 
+
+  /* Draw to Back Buffer */
+  ZeroMemory(&ddsd, sizeof(DDSURFACEDESC));
+  ddsd.dwSize = sizeof(ddsd);
+  ddsd.dwFlags = DDSD_LPSURFACE | DDSD_PITCH;
+
+  hr = IDirectDrawSurface_Lock(renderer->back, NULL, &ddsd, DDLOCK_WAIT, NULL);
+
+  if (FAILED(hr)) return chip8_err_unknown;
+
+  pitch = ddsd.lPitch;
+  data = (u8*)ddsd.lpSurface;
+
+  draw_bitmap(data, pitch, machine->display);
+
+  IDirectDrawSurface_Unlock(renderer->back, data);
+
+  /* Flip to Front Buffer */ 
+  ZeroMemory(&rect, sizeof(RECT));
+  GetClientRect(renderer->wnd, &rect);
+
+  ClientToScreen(renderer->wnd, (LPPOINT) &rect.left);
+  ClientToScreen(renderer->wnd, (LPPOINT) &rect.right);
+
+  IDirectDrawSurface_Blt(renderer->front, &rect, renderer->back, NULL, DDBLT_WAIT, NULL);
+
+  return chip8_success;
 };

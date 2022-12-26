@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <commctrl.h>
+
 #include "chip8.h"
 #include "chip8_errors.h"
 #include "render.h"
@@ -11,6 +13,9 @@
 
 static char window_class[] = "MainWindowClass";
 
+static struct machine_t machine;
+static struct render_t *renderer = NULL;
+
 LRESULT CALLBACK main_window_proc(HWND, UINT, WPARAM, LPARAM);
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, int show_state) {
@@ -18,15 +23,21 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   MSG msg; 
   HWND main_window;
   BOOL res;
-  struct render_t *renderer = NULL;
+  int border, menu;
 
   HBRUSH black_brush = (HBRUSH) GetStockObject(BLACK_BRUSH);
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
   HCURSOR arrow_cursor = LoadCursor(instance, IDC_ARROW);
   HMENU main_menu = LoadMenu(instance, MAKEINTRESOURCE(IDM_MAIN_MENU));
 
+  InitCommonControls();
   ZeroMemory(&wcex, sizeof(WNDCLASSEX));
   ZeroMemory(&msg, sizeof(MSG));
+
+  init_machine(&machine);
+
+  border = GetSystemMetrics(SM_CXBORDER);
+  menu = GetSystemMetrics(SM_CYMENU);
 
   wcex.cbSize = sizeof(WNDCLASSEX);
   wcex.style  = CS_VREDRAW | CS_HREDRAW;
@@ -38,7 +49,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   wcex.lpszClassName = window_class;
   wcex.lpfnWndProc = main_window_proc;
   wcex.lpszMenuName = MAKEINTRESOURCE(IDM_MAIN_MENU);
-  wcex.cbWndExtra  = sizeof(struct render_t *);
 
   res = RegisterClassEx(&wcex); 
 
@@ -54,8 +64,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
       "Chip 8 Emulator",
       WS_OVERLAPPEDWINDOW & ~ (WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_THICKFRAME),
       CW_USEDEFAULT, CW_USEDEFAULT,
-      fb_width * default_scale, 
-      fb_height * default_scale,
+      fb_width * default_scale + 2 * border, 
+      fb_height * default_scale + border + menu,
       NULL,
       NULL,
       instance,
@@ -75,14 +85,25 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
     goto cleanup;
   }
 
-  SetWindowLongPtr(main_window, 0, (LONG) renderer);
-
   ShowWindow(main_window, show_state);
   UpdateWindow(main_window);
 
-  while(GetMessage(&msg, main_window, 0, 0) > 0) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
+  for(;;) {
+    if (PeekMessage(&msg, main_window, 0, 0, PM_REMOVE)) {
+      if (msg.message == WM_QUIT) {
+        break;
+      }
+
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      continue;
+    }
+
+    // if not handling message do this 
+    // check for zero if the window is destroyed
+    if (renderer) {
+      render_display(renderer, &machine);
+    }
   }
 
 cleanup:
@@ -101,14 +122,13 @@ cleanup:
 }
 
 static LRESULT on_close(HWND window) {
-  int res = MessageBox(window, "Are you sure?", "Confirmation", MB_YESNO | MB_ICONQUESTION);
-  struct render_t *renderer = (struct render_t*) GetWindowLongPtr(window, 0);
+  int res = MessageBox(NULL, "Are you sure?", "Confirmation", MB_YESNO | MB_ICONQUESTION);
 
   if (IDYES == res) {
     if (renderer) {
       destroy_renderer(renderer);
       renderer = NULL; 
-      SetWindowLongPtr(window, 0, (LONG) renderer);
+      SetWindowLongPtr(window, 0, (LONG_PTR) renderer);
     };
 
     DestroyWindow(window);
@@ -117,11 +137,23 @@ static LRESULT on_close(HWND window) {
   return FALSE;
 }
 
+static LRESULT on_paint(HWND window) {
+  if (!renderer) {
+    return FALSE;
+  }
+
+  if (chip8_failed(render_display(renderer, &machine))) {
+    // ** do nothing **/
+  }
+
+  return FALSE;
+}
+
 LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
-
-
   switch (message)
   {
+    //case WM_PAINT:
+      //return on_paint(window);
     case WM_CLOSE: 
       return on_close(window);
       break;
@@ -134,3 +166,4 @@ LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPAR
 
   return FALSE;
 }
+
