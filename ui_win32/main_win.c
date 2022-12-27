@@ -20,7 +20,7 @@ static struct render_t *renderer = NULL;
 
 
 static u8 programs_IBM_Logo_ch8[] = {
-  0x00, 0xe0, 0xa2, 0x2a, 0x60, 0x0c, 0x61, 0x08, 0xd0, 0x1f, 0x70, 0x09,
+  0x00, 0xe0, 0xa2, 0x2a, 0x60, 0x0c, 0x61, 0x08, 0xd0, 0x1f, 0x12, 0x0a,// 0x70, 0x09,
   0xa2, 0x39, 0xd0, 0x1f, 0xa2, 0x48, 0x70, 0x08, 0xd0, 0x1f, 0x70, 0x04,
   0xa2, 0x57, 0xd0, 0x1f, 0x70, 0x08, 0xa2, 0x66, 0xd0, 0x1f, 0x70, 0x08,
   0xa2, 0x75, 0xd0, 0x1f, 0x12, 0x28, 0xff, 0x00, 0xff, 0x00, 0x3c, 0x00,
@@ -47,10 +47,16 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
   HCURSOR arrow_cursor = LoadCursor(instance, IDC_ARROW);
   HMENU main_menu = LoadMenu(instance, MAKEINTRESOURCE(IDM_MAIN_MENU));
+ 
+  LARGE_INTEGER start_time, freq, current_time;
+  float elapsed_time = 0.0f;
 
   InitCommonControls();
   ZeroMemory(&wcex, sizeof(WNDCLASSEX));
   ZeroMemory(&msg, sizeof(MSG));
+
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&start_time);
 
   init_machine(&machine);
   load_machine(&machine, programs_IBM_Logo_ch8, programs_IBM_Logo_ch8_len);
@@ -109,6 +115,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   ShowWindow(main_window, show_state);
   UpdateWindow(main_window);
 
+
+
   for(;;) {
     if (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
       if (msg.message == WM_QUIT) {
@@ -120,6 +128,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
         DispatchMessage(&msg);
       }
     } else {
+      QueryPerformanceCounter(&current_time);
+      elapsed_time += (float)(current_time.QuadPart - start_time.QuadPart) / (float)freq.QuadPart;
+
+      start_time = current_time;
+
+      //if (elapsed_time < 1.0f) {
+      //  continue;
+      //}
+
       fetch_and_execute(&machine);
       if (renderer) {
         render_display(renderer, &machine);

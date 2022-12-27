@@ -12,10 +12,17 @@
 #define snprintf _snprintf 
 #endif
 
+#if (_MSC_VER <= 1200)
 #define _U64(x) x##ui64
 #define INLINE_U64_MACRO (_inline unsigned __int64)
 #define INLINE_U32_MACRO (_inline unsigned __int32)
 #define INLINE_U16_MACRO (_inline unsigned __int16)
+#else
+#define INLINE_U64_MACRO (unsigned __int64)
+#define INLINE_U32_MACRO (unsigned __int32)
+#define INLINE_U16_MACRO (unsigned __int16)
+#define _U64(x) x##ull
+#endif
 #else
 #define INLINE_U32_MACRO
 #define INLINE_U16_MACRO
@@ -53,14 +60,12 @@ typedef uint64_t u64;
 
 
 #define FLIP_ENDIANNESS_32(value) \
-  INLINE_U32_MACRO\
   (((value) & 0x000000FFul) << 24) | \
   (((value) & 0x0000FF00ul) << 8)  | \
   (((value) & 0x00FF0000ul) >> 8)  | \
   (((value) & 0xFF000000ul) >> 24)
 
 #define FLIP_ENDIANNESS_16(value) \
-  INLINE_U16_MACRO \
   (((value) & 0x00FF) << 8) | \
   (((value) & 0xFF00) >> 8)
 
@@ -76,7 +81,14 @@ typedef uint64_t u64;
   (((value) & _U64(0xFF00000000000000)) >> 56)
 
 
-#define ROTR64(v,n) ((v) >> (n) | (v) << (64 - (n)))
+#define DIR_LEFT  1 
+#define DIR_RIGHT 0
+
+#define ROT64(v,n,d) ((d) ? (((v) << (n)) | ((v) >> (64-(n)))) : (((v) >> (n)) | ((v) << (64-(n)))))
+
+#define ROTR64(v,n) ROT64((v), (n), DIR_RIGHT)
+#define ROTL64(v,n) ROT64((v), (n), DIR_LEFT)
+
 
 #endif /* CHIP8_TYPES_H */
 
