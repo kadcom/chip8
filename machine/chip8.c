@@ -26,11 +26,13 @@ static u8 fonts[] = {
 };
 
 static u16 program_base_addr = 0x200;
+static u8  top_of_stack = 0x10;
 
 int init_machine(struct machine_t *m) {
   memset(m, 0, sizeof(struct machine_t));
   
   m->cpu.PC = program_base_addr;
+  m->cpu.SP = top_of_stack;
   memcpy(m->memory, fonts, sizeof(fonts));
   return chip8_success;
 }
@@ -94,6 +96,15 @@ static int disasm_inst(inst_t instruction, char *buf, size_t buf_len) {
     case 0x1:
       snprintf(buf, buf_len, "jmp\t0x%04x", df.nnn);
       break;
+    case 0x2: 
+      snprintf(buf, buf_len, "call\t0x%04x", df.nnn);
+      break;
+    case 0x3:
+      snprintf(buf, buf_len, "se\tV%X, 0x%02x", df.x, df.kk);
+      break;
+    case 0x4:
+      snprintf(buf, buf_len, "sne\tV%X, 0x%02x", df.x, df.kk);
+      break;
     case 0x6: 
       snprintf(buf, buf_len, "ld\tV%X, 0x%02x", df.x, df.kk);
       break; 
@@ -126,9 +137,9 @@ int disasm_pc(struct machine_t *m, char *buf, size_t buf_len) {
 static chip8_callback_t callbacks[] = 
 {
   // 0x0          0x1            0x2           0x3 
-  (void*) -1   , jump         , unimplemented, unimplemented, 
+  (void*) -1   , jump         ,  call,        skip_equal, 
   // 0x4          0x5            0x6           0x7 
-  unimplemented, unimplemented,  set_register, add_to_register, 
+  skip_neq, unimplemented,  set_register, add_to_register, 
   // 0x8          0x9            0xA           0xB
   unimplemented, unimplemented, set_index_register, unimplemented, 
   // 0xC          0xD            0xE           0xF
@@ -150,7 +161,8 @@ int fetch_and_execute(struct machine_t *m) {
           goto end;
           break; 
         case 0xEE:
-          return chip8_err_unimplemented;
+          cb = ret; 
+          goto end;
           break;
         default:
           return chip8_err_invalid_instruction;

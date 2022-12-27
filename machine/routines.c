@@ -1,4 +1,6 @@
 #include <memory.h>
+#include "chip8.h"
+#include "chip8_internal.h"
 #include "common.h"
 #include "routines.h"
 
@@ -29,10 +31,40 @@ int CHIP8_CALLBACK set_index_register(struct machine_t *m, struct inst_field_t f
   return chip8_success;
 }
 
+int CHIP8_CALLBACK ret(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.PC = m->stack[m->cpu.SP / 2];
+  m->cpu.SP += 2;
+  return chip8_success;
+}
+
+int CHIP8_CALLBACK call(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.SP -= 2;
+  m->stack[m->cpu.SP] = m->cpu.PC;
+  m->cpu.PC = f.nnn;
+  return chip8_success;
+}
+
+int CHIP8_CALLBACK skip_equal(struct machine_t *m, struct inst_field_t f) {
+  if (m->cpu.V[f.x] == f.kk) {
+    m->cpu.PC += 2;
+  }
+
+  return chip8_success;
+}
+
+int CHIP8_CALLBACK skip_neq(struct machine_t *m, struct inst_field_t f) {
+  if (m->cpu.V[f.x] != f.kk) {
+    m->cpu.PC += 2;
+  }
+
+  return chip8_success;
+
+}
+
 static inline u8 extract_tgt_sprite(u64 fb_line, u8 x) {
   u8   pos = x % 64;
   u64  rotated = ROTR64(fb_line, pos);
- 
+
   return (u8)(rotated & 0xFF);
 }
 
