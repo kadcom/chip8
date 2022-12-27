@@ -48,12 +48,19 @@ static inline u64 replace_tgt_line(u64 tgt_line, u8 sp_line, u8 x) {
   return tgt_line; 
 }
 
+static unsigned char lookup[16] = { 0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe, 0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf, };
+
+// finding the little endian version of big endian byte from chip8
+static u8 sprite_lookup(u8 sprite_value) {
+  return (lookup[sprite_value & 0xF] << 4) | lookup[sprite_value >> 4];
+}
+
 #define max_sprite_line_count 15
 
 int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
   u8 sprite[max_sprite_line_count] = {0}; /* 40 byte sprite */
   u8 sprite_tgt, sprite_line, target = 0;
-  u32 i, sprite_size; 
+  u32 i; 
   u64 current_line, line; //scanline
   u8 x, y, ny, flip0;
 
@@ -77,7 +84,7 @@ int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
     current_line = m->display[ny];
 
     // get current sprite line 
-    sprite_line  = sprite[i];
+    sprite_line  = sprite_lookup(sprite[i]);
 
     // get current target sprite line 
     sprite_tgt   = extract_tgt_sprite(current_line, x);

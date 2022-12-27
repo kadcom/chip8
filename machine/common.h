@@ -58,7 +58,6 @@ typedef uint64_t u64;
 #define PACKED __attribute__((packed))
 #endif
 
-
 #define FLIP_ENDIANNESS_32(value) \
   (((value) & 0x000000FFul) << 24) | \
   (((value) & 0x0000FF00ul) << 8)  | \
@@ -80,6 +79,8 @@ typedef uint64_t u64;
   (((value) & _U64(0x00FF000000000000)) >> 40) | \
   (((value) & _U64(0xFF00000000000000)) >> 56)
 
+
+#define FLIP_ENDIANNESS_8(value) (FLIP_ENDIANNESS_32((value)) & 0xFF)
 
 #define DIR_LEFT  1 
 #define DIR_RIGHT 0
