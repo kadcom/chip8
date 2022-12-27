@@ -31,8 +31,7 @@ int CHIP8_CALLBACK set_index_register(struct machine_t *m, struct inst_field_t f
 
 static inline u8 extract_tgt_sprite(u64 fb_line, u8 x) {
   u8   pos = x % 64;
-  u8   n   = 64 - (pos + 8);
-  u64  rotated = ROTL64(fb_line, n);
+  u64  rotated = ROTR64(fb_line, pos);
  
   return (u8)(rotated & 0xFF);
 }
@@ -40,10 +39,10 @@ static inline u8 extract_tgt_sprite(u64 fb_line, u8 x) {
 static inline u64 replace_tgt_line(u64 tgt_line, u8 sp_line, u8 x) {
   u8  pos = x % 64; 
 
-  u64 tgt_sp_line = ROTR64((u64) sp_line, pos);
-  u64 tgt_mask    = ROTR64((((u64) 1 << 8) - 1) << pos, pos);
+  u64 tgt_sp_line = ROTL64((u64) sp_line, pos);
+  u64 tgt_mask    = ROTL64(_U64(0xFF), pos);
 
-  tgt_line &= tgt_mask;
+  tgt_line &= ~tgt_mask;
   tgt_line |= tgt_sp_line;
 
   return tgt_line; 
@@ -67,7 +66,7 @@ int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
   x = m->cpu.V[f.x];
   y = m->cpu.V[f.y];
 
-  for (i = 0; i < max_sprite_line_count; ++i) {
+  for (i = 0; i < f.n; ++i) {
     // wrap on target if any of it > 32 
     ny = (y + (u8)i) % 32;
 

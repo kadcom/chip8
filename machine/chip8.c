@@ -69,10 +69,9 @@ static int decode(inst_t instruction, struct inst_field_t *field) {
 }
 
 static int execute_field(struct machine_t *m, struct inst_field_t field, chip8_callback_t cb) {
-  int ret = cb(m, field);
   m->cpu.PC += 2;
 
-  return ret;
+  return cb(m, field);
 }
 
 static int disasm_inst(inst_t instruction, char *buf, size_t buf_len) {
