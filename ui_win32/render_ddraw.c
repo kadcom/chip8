@@ -167,7 +167,7 @@ static void draw_bitmap(u8* data, int pitch, u64* bitmap)
     for (x = 0; x < fb_width; x++)
     {
       // Check if the pixel is set
-      if (row & (n << x))
+      if ((row >> x) & 1)
       {
         // Calculate the pixel position
         px = x * scale;

@@ -86,13 +86,14 @@ int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
     target       = sprite_line ^ sprite_tgt;
 
     // check if any bit is flipped to zero 
-    flip0        = (sprite_tgt & target) != target;
+    flip0        = (sprite_tgt & target) != sprite_tgt;
 
     // replace the bit with the target sprite, wrap if necessary
     line = replace_tgt_line(current_line, target, x);
 
     // show in display
     m->display[ny] = line;
+    m->cpu.VF = (flip0) ? 1 : 0;
 
   }
   return chip8_success;
