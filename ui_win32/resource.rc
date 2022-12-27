@@ -72,7 +72,7 @@ BEGIN
         BEGIN
             MENUITEM "Clear Framebuffer",           ID_DIAGNOSTICS_FRAMEBUFFER_CLEARFRAMEBUFFER
 
-            MENUITEM "&Checkered Pattern",          ID_DIAGNOSTICS_CHECKEREDPATTERN
+            MENUITEM "&Check FB Debug",          ID_DIAGNOSTICS_CHECKEREDPATTERN
 
         END
     END

@@ -161,7 +161,7 @@ static void draw_bitmap(u8* data, int pitch, u64* bitmap)
   // Draw the Chip-8 bitmap
   for (y = 0; y < fb_height; y++) {
     // Get the current row of the bitmap
-    row = FLIP_ENDIANNESS_64(bitmap[y]);
+    row = bitmap[y];
 
     // Draw the row of the bitmap
     for (x = 0; x < fb_width; x++)
