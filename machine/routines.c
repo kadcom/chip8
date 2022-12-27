@@ -44,7 +44,7 @@ int CHIP8_CALLBACK draw(struct machine_t *m, struct inst_field_t f) {
   y = m->cpu.V[f.y];
 
   for (i = 0; i < sprite_line_count; ++i) {
-    sprite_line = ROTR64(sprite[i], x); // wrap x
+    sprite_line = ROTR64((u64)sprite[i], x); // wrap x
     
     ny = (y + (u8)i) % 32; // wrap y
 
