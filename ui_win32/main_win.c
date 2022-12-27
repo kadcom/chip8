@@ -18,7 +18,6 @@ static char window_class[] = "MainWindowClass";
 static struct machine_t machine;
 static struct render_t *renderer = NULL;
 
-
 static u8 programs_IBM_Logo_ch8[] = {
   0x00, 0xe0, 
   0xa2, 0x2a, 
@@ -54,19 +53,20 @@ static u8 programs_IBM_Logo_ch8[] = {
 static size_t programs_IBM_Logo_ch8_len = 132;
 
 LRESULT CALLBACK main_window_proc(HWND, UINT, WPARAM, LPARAM);
+static void attach_statusbar(HWND, HINSTANCE, int height);
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, int show_state) {
   WNDCLASSEX wcex; 
   MSG msg; 
   HWND main_window;
   BOOL res;
-  int border, menu;
+  int border, menu, status;
 
   HBRUSH black_brush = (HBRUSH) GetStockObject(BLACK_BRUSH);
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
   HCURSOR arrow_cursor = LoadCursor(instance, IDC_ARROW);
   HMENU main_menu = LoadMenu(instance, MAKEINTRESOURCE(IDM_MAIN_MENU));
- 
+
   LARGE_INTEGER start_time, freq, current_time;
   float elapsed_time = 0.0f;
 
@@ -82,6 +82,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
 
   border = GetSystemMetrics(SM_CXBORDER);
   menu = GetSystemMetrics(SM_CYMENU);
+  status = 20;
 
   wcex.cbSize = sizeof(WNDCLASSEX);
   wcex.style  = CS_VREDRAW | CS_HREDRAW;
@@ -109,7 +110,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
       WS_OVERLAPPEDWINDOW & ~ (WS_MAXIMIZEBOX | WS_MINIMIZEBOX | WS_THICKFRAME),
       CW_USEDEFAULT, CW_USEDEFAULT,
       fb_width * default_scale + 2 * border, 
-      fb_height * default_scale + border + menu,
+      fb_height * default_scale + border + menu + status,
       NULL,
       NULL,
       instance,
@@ -130,11 +131,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   }
 
   // diag_checkered(&machine);
-  
+
   ShowWindow(main_window, show_state);
   UpdateWindow(main_window);
 
-
+  attach_statusbar(main_window, instance, status);
 
   for(;;) {
     if (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
@@ -152,10 +153,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
 
       start_time = current_time;
 
-      //if (elapsed_time < 1.0f) {
-      //  continue;
-      //}
-
+      /* TODO: Use the elapsed time as execution timing */
+      /* TODO: accurate emulation with this timing: https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html */
       fetch_and_execute(&machine);
       if (renderer) {
         render_display(renderer, &machine);
@@ -233,3 +232,15 @@ LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPAR
   return FALSE;
 }
 
+void attach_statusbar(HWND window, HINSTANCE instance, int height) {
+  HWND status_window = CreateWindowEx(0, STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE,
+      0, 0, 0, 0, window, NULL, instance, NULL);
+  int parts[] = {200, 300, -1};
+  RECT rect;
+  SendMessage(status_window, SB_SETPARTS, 3, (LPARAM)parts);
+
+  SendMessage(status_window, SB_SETTEXT, 0, (LPARAM)"Ready");
+  SendMessage(status_window, SB_SETTEXT, 2, (LPARAM)"https://www.retrocoding.net");
+  GetClientRect(window, &rect);
+  MoveWindow(status_window, 0, rect.bottom - height, rect.right, height, TRUE);
+}

@@ -217,7 +217,10 @@ int render_display(struct render_t *renderer, struct machine_t *machine) {
 
   /* Flip to Front Buffer */ 
   ZeroMemory(&rect, sizeof(RECT));
+
+  // TODO: pass rect on initialisation
   GetClientRect(renderer->wnd, &rect);
+  InflateRect(&rect, 0, -20);
 
   ClientToScreen(renderer->wnd, (LPPOINT) &rect.left);
   ClientToScreen(renderer->wnd, (LPPOINT) &rect.right);
