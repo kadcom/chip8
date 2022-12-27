@@ -503,3 +503,6 @@ FodyWeavers.xsd
 
 # Ignore build dir 
 build
+vs
+vs2019
+vs8
