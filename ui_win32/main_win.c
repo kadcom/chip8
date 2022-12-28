@@ -185,10 +185,8 @@ static LRESULT on_close(HWND window) {
       destroy_renderer(renderer);
       renderer = NULL; 
     };
+    DestroyWindow(window);
   }
-
-  DestroyWindow(window);
-
   return FALSE;
 }
 
@@ -214,6 +212,9 @@ LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPAR
           break;
         case ID_DIAGNOSTICS_FRAMEBUFFER_CLEARFRAMEBUFFER:
           diag_clear(&machine);
+          break;
+        case ID_FILE_EXIT:
+          SendMessage(window, WM_CLOSE, 0, 0);
           break;
         default:
           return FALSE;
