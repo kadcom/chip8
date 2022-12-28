@@ -34,7 +34,10 @@ C8_SUB_ROUTINE(reg_shr, 0x8, 0x6);
 C8_SUB_ROUTINE(reg_subn, 0x8, 0x7);
 C8_SUB_ROUTINE(reg_shl, 0x8, 0xE);
 
+C8_ROUTINE(skip_neq_regs, 0x9);
+
 C8_ROUTINE(set_index_register, 0xA);
+C8_ROUTINE(jump_regs, 0xB);
 C8_ROUTINE(draw, 0xD); 
 C8_ROUTINE(unimplemented, _);
 
@@ -48,7 +51,7 @@ static c8_routine_t c8_routines[0x10] =
   // 0x4          0x5            0x6           0x7 
   skip_neq, unimplemented,  set_register, add_to_register, 
   // 0x8          0x9            0xA           0xB
-  regs_ops, unimplemented, set_index_register, unimplemented, 
+  regs_ops, skip_neq_regs, set_index_register, jump_regs, 
   // 0xC          0xD            0xE           0xF
   unimplemented, draw,          unimplemented, unimplemented,
 };

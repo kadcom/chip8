@@ -3,6 +3,7 @@
 #include "chip8_errors.h"
 #include "chip8_internal.h"
 #include "common.h"
+#include "routines.h"
 
 int CHIP8_CALLBACK clear_screen(struct machine_t *m, UNUSED struct inst_field_t f) {
   UNUSED_PARAM(f);
@@ -136,6 +137,24 @@ int CHIP8_CALLBACK regs_ops(struct machine_t *m, struct inst_field_t f) {
   return chip8_success;
 }
 
+int CHIP8_CALLBACK skip_neq_regs(struct machine_t *m, struct inst_field_t f) {
+  if (f.n != 0) {
+    return chip8_err_invalid_instruction;
+  }
+
+  if (m->cpu.V[f.x] != m->cpu.V[f.y]) {
+    m->cpu.PC += 2;
+  }
+
+  return chip8_success;
+}
+
+int CHIP8_CALLBACK jump_regs(struct machine_t *m, struct inst_field_t f) {
+  u16 target = f.nnn + m->cpu.V0;
+  m->cpu.PC = target;
+
+  return chip8_success;
+}
 
 static inline u8 extract_tgt_sprite(u64 fb_line, u8 x) {
   u8   pos = x % 64;
