@@ -30,7 +30,5 @@ struct PACKED inst_field_t {
 #pragma pack(pop)
 #endif
 
-typedef int (CHIP8_CALLBACK *chip8_callback_t)(struct machine_t*, struct inst_field_t);
-
 #include "routines.h"
 #endif

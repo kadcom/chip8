@@ -40,7 +40,7 @@ struct cpu_t {
 struct machine_t {
   struct cpu_t cpu; 
   u8           memory[4096]; // 4K of RAM 
-  u16          stack[16];    // 256 bytes of stack 
+  u16          stack[16];    // 32 bytes of stack 
   u64          display[32];  // 32 x 64 bit lines.
 };
 

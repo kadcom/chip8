@@ -1,6 +1,7 @@
 #include "chip8.h"
 #include "chip8_errors.h"
 #include "chip8_internal.h"
+#include "routines.h"
 
 #include <memory.h>
 #include <string.h>
@@ -70,7 +71,7 @@ static int decode(inst_t instruction, struct inst_field_t *field) {
   return chip8_success;
 }
 
-static int execute_field(struct machine_t *m, struct inst_field_t field, chip8_callback_t cb) {
+static int execute_field(struct machine_t *m, struct inst_field_t field, c8_routine_t cb) {
   m->cpu.PC += 2;
 
   return cb(m, field);
@@ -111,6 +112,39 @@ static int disasm_inst(inst_t instruction, char *buf, size_t buf_len) {
     case 0x7:
       snprintf(buf, buf_len, "add\tV%X, 0x%02x", df.x, df.kk);
       break;
+    case 0x8:
+      switch(df.n) {
+        case 0x0:
+          snprintf(buf, buf_len, "ld\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0x1:
+          snprintf(buf, buf_len, "or\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0x2:
+          snprintf(buf, buf_len, "and\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0x3:
+          snprintf(buf, buf_len, "xor\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0x4:
+          snprintf(buf, buf_len, "add\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0x5:
+          snprintf(buf, buf_len, "sub\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0x6:
+          snprintf(buf, buf_len, "shr\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0x7:
+          snprintf(buf, buf_len, "subn\tV%X, 0xV%X", df.x, df.y);
+          break;
+        case 0xE:
+          snprintf(buf, buf_len, "shl\tV%X, 0xV%X", df.x, df.y);
+          break;
+
+        default:
+          return chip8_err_invalid_instruction;
+      };
     case 0xA:
       snprintf(buf, buf_len, "ld\tI, 0x%04x", df.nnn);
       break;
@@ -134,22 +168,10 @@ int disasm_pc(struct machine_t *m, char *buf, size_t buf_len) {
   return disasm_inst(inst, buf, buf_len);
 };
 
-static chip8_callback_t callbacks[] = 
-{
-  // 0x0          0x1            0x2           0x3 
-  (void*) -1   , jump         ,  call,        skip_equal, 
-  // 0x4          0x5            0x6           0x7 
-  skip_neq, unimplemented,  set_register, add_to_register, 
-  // 0x8          0x9            0xA           0xB
-  unimplemented, unimplemented, set_index_register, unimplemented, 
-  // 0xC          0xD            0xE           0xF
-  unimplemented, draw,          unimplemented, unimplemented,
-};
-
 int fetch_and_execute(struct machine_t *m) {
   inst_t inst;
   struct inst_field_t df;
-	chip8_callback_t cb;
+	c8_routine_t cb;
 
   fetch(m, &inst);
   decode(inst, &df);
@@ -169,7 +191,7 @@ int fetch_and_execute(struct machine_t *m) {
     };
   };
 
-  cb = callbacks[df.prefix]; 
+  cb = c8_routines[df.prefix]; 
 end:
   execute_field(m, df, cb);
   return chip8_success;

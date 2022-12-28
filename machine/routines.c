@@ -1,8 +1,8 @@
 #include <memory.h>
 #include "chip8.h"
+#include "chip8_errors.h"
 #include "chip8_internal.h"
 #include "common.h"
-#include "routines.h"
 
 int CHIP8_CALLBACK clear_screen(struct machine_t *m, UNUSED struct inst_field_t f) {
   UNUSED_PARAM(f);
@@ -58,8 +58,84 @@ int CHIP8_CALLBACK skip_neq(struct machine_t *m, struct inst_field_t f) {
   }
 
   return chip8_success;
-
 }
+
+int CHIP8_CALLBACK skip_eq_regs(struct machine_t *m, struct inst_field_t f) {
+  if (m->cpu.V[f.x] == m->cpu.V[f.y]) {
+    m->cpu.PC += 2;
+  }
+
+  return chip8_success;
+}
+
+/* for 8 prefix */
+
+static void CHIP8_CALLBACK reg_ld(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.x] = m->cpu.V[f.y];
+}
+
+static void CHIP8_CALLBACK reg_or(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.x] |= m->cpu.V[f.y];
+}
+
+static void CHIP8_CALLBACK reg_and(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.x] &= m->cpu.V[f.y];
+}
+
+static void CHIP8_CALLBACK reg_xor(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.y] ^= m->cpu.V[f.y];
+}
+
+static void CHIP8_CALLBACK reg_add(struct machine_t *m, struct inst_field_t f) {
+  u16 res = m->cpu.V[f.x] + m->cpu.V[f.y];
+  m->cpu.VF = (res > 0xFF);
+  m->cpu.V[f.x] = (u8)(res & 0xFF);
+}
+
+static void CHIP8_CALLBACK reg_sub(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.VF = m->cpu.V[f.x] > m->cpu.V[f.y];
+  m->cpu.V[f.x] -= m->cpu.V[f.y]; 
+}
+
+static void CHIP8_CALLBACK reg_shr(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.x] >>= 1;
+  m->cpu.VF = (m->cpu.V[f.x] & 0x1);
+}
+
+static void CHIP8_CALLBACK reg_shl(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.V[f.x] <<= 1;
+  m->cpu.VF = (m->cpu.V[f.x] >> 7 & 0x1);
+}
+
+
+static void reg_subn(struct machine_t *m, struct inst_field_t f) {
+  m->cpu.VF = (m->cpu.V[f.y] > m->cpu.V[f.x]);
+  m->cpu.V[f.x] = m->cpu.V[f.y] - m->cpu.V[f.x];
+}
+
+static c8_sub_routine_t reg_ops_cb[0xF] = {
+// 0       1       2       3        4
+  reg_ld,  reg_or, reg_and, reg_add, reg_xor,
+// 5       6         7       8        9
+  reg_sub, reg_shr, reg_subn, _SRNONE, _SRNONE,
+// 0xa,    0xb,     0xc,     0xd,     0xe, 
+  _SRNONE, _SRNONE, _SRNONE, _SRNONE, reg_shl,
+};
+
+
+int CHIP8_CALLBACK regs_ops(struct machine_t *m, struct inst_field_t f) {
+
+  c8_sub_routine_t sr = reg_ops_cb[f.n];
+
+  if (_SRNONE == sr) {
+    return chip8_err_invalid_instruction;
+  }
+
+  sr(m, f);
+  
+  return chip8_success;
+}
+
 
 static inline u8 extract_tgt_sprite(u64 fb_line, u8 x) {
   u8   pos = x % 64;
