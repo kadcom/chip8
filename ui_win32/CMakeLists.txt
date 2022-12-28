@@ -1,7 +1,7 @@
 enable_language(C)
 enable_language(RC)
 
-set(SOURCE_FILES main_win.c render_ddraw.c)
+set(SOURCE_FILES main_win.c render_ddraw.c debug_view.c)
 set(HEADER_FILES diagnostics.h render.h)
 set(RESOURCE_FILES resource.rc resource.h)
 

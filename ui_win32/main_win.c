@@ -7,6 +7,7 @@
 #include "resource.h"
 
 #include "diagnostics.h"
+#include "debug_view.h"
 
 #define fb_width  64
 #define fb_height 32
@@ -14,9 +15,6 @@
 #define default_scale 10
 
 static char window_class[] = "MainWindowClass";
-
-static struct machine_t machine;
-static struct render_t *renderer = NULL;
 
 static u8 programs_IBM_Logo_ch8[] = {
   0x00, 0xe0, 
@@ -52,8 +50,16 @@ static u8 programs_IBM_Logo_ch8[] = {
 };
 static size_t programs_IBM_Logo_ch8_len = 132;
 
-LRESULT CALLBACK main_window_proc(HWND, UINT, WPARAM, LPARAM);
+static LRESULT CALLBACK main_window_proc(HWND, UINT, WPARAM, LPARAM);
 static void attach_statusbar(HWND, HINSTANCE, int height);
+
+struct app_data_t {
+  struct debug_view_t debug_view;
+  struct machine_t machine;
+  struct render_t *renderer;
+
+  HINSTANCE instance;
+};
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, int show_state) {
   WNDCLASSEX wcex; 
@@ -61,6 +67,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   HWND main_window;
   BOOL res;
   int border, menu, status;
+  struct app_data_t app_data;
 
   HBRUSH black_brush = (HBRUSH) GetStockObject(BLACK_BRUSH);
   HICON  app_icon = LoadIcon(instance, IDI_APPLICATION);
@@ -73,12 +80,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   InitCommonControls();
   ZeroMemory(&wcex, sizeof(WNDCLASSEX));
   ZeroMemory(&msg, sizeof(MSG));
+  ZeroMemory(&app_data, sizeof(struct app_data_t));
+
+  app_data.instance = instance;
 
   QueryPerformanceFrequency(&freq);
   QueryPerformanceCounter(&start_time);
 
-  init_machine(&machine);
-  load_machine(&machine, programs_IBM_Logo_ch8, programs_IBM_Logo_ch8_len);
+  init_machine(&app_data.machine);
+  load_machine(&app_data.machine, programs_IBM_Logo_ch8, programs_IBM_Logo_ch8_len);
 
   border = GetSystemMetrics(SM_CXBORDER);
   menu = GetSystemMetrics(SM_CYMENU);
@@ -102,7 +112,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
     return -1;
   }
 
-
   main_window = CreateWindowEx( 
       WS_EX_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE, 
       window_class,
@@ -122,28 +131,30 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
     return -1;
   }
 
-  if (chip8_failed(create_renderer(&renderer))) {
+  if (chip8_failed(create_renderer(&app_data.renderer))) {
     goto cleanup;
   }
 
-  if (chip8_failed(initialise_renderer(renderer, main_window, fb_width * default_scale, fb_height * default_scale))) {
+  if (chip8_failed(initialise_renderer(app_data.renderer, main_window, fb_width * default_scale, fb_height * default_scale))) {
     goto cleanup;
   }
-
-  // diag_checkered(&machine);
 
   ShowWindow(main_window, show_state);
   UpdateWindow(main_window);
 
   attach_statusbar(main_window, instance, status);
+  init_debug_view(&app_data.debug_view, main_window, instance, &app_data.machine);
+
+  SetWindowLongPtr(main_window, GWLP_USERDATA, (LONG) &app_data);
 
   for(;;) {
     if (PeekMessage(&msg, 0, 0, 0, PM_NOREMOVE)) {
       if (msg.message == WM_QUIT) {
+        destroy_debug_view(&app_data.debug_view);
         break;
       }
 
-      if (GetMessage(&msg, main_window, 0, 0) > 0) {
+      if (GetMessage(&msg, 0, 0, 0) > 0) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
       }
@@ -155,18 +166,18 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
 
       /* TODO: Use the elapsed time as execution timing */
       /* TODO: accurate emulation with this timing: https://jackson-s.me/2019/07/13/Chip-8-Instruction-Scheduling-and-Frequency.html */
-      fetch_and_execute(&machine);
-      if (renderer) {
-        render_display(renderer, &machine);
+      fetch_and_execute(&app_data.machine);
+      if (app_data.renderer) {
+        render_display(app_data.renderer, &app_data.machine);
       }
     }
   }
 
 cleanup:
 
-  if (renderer) {
-    destroy_renderer(renderer);
-    renderer = NULL;
+  if (app_data.renderer) {
+    destroy_renderer(app_data.renderer);
+    app_data.renderer = NULL;
   }
 
   if (main_window) {
@@ -178,12 +189,14 @@ cleanup:
 }
 
 static LRESULT on_close(HWND window) {
+  struct app_data_t *ad = (struct app_data_t *) GetWindowLongPtr(window, GWLP_USERDATA);
+
   int res = MessageBox(NULL, "Are you sure?", "Confirmation", MB_YESNO | MB_ICONQUESTION);
 
   if (IDYES == res) {
-    if (renderer) {
-      destroy_renderer(renderer);
-      renderer = NULL; 
+    if (ad->renderer) {
+      destroy_renderer(ad->renderer);
+      ad->renderer = NULL; 
     };
     DestroyWindow(window);
   }
@@ -191,31 +204,48 @@ static LRESULT on_close(HWND window) {
 }
 
 static LRESULT on_paint(HWND window) {
-  if (!renderer) {
+  struct app_data_t *ad = (struct app_data_t *) GetWindowLongPtr(window, GWLP_USERDATA);
+
+  if (!ad->renderer) {
     return FALSE;
   }
 
-  if (chip8_failed(render_display(renderer, &machine))) {
+  if (chip8_failed(render_display(ad->renderer, &ad->machine))) {
     // ** do nothing **/
   }
 
   return FALSE;
 }
 
-LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
+static LRESULT on_debugger(HWND window) {
+  struct app_data_t *ad = (struct app_data_t *) GetWindowLongPtr(window, GWLP_USERDATA);
+
+  if (ad == NULL) {
+    return FALSE;
+  }
+
+  init_debug_view(&ad->debug_view, window, ad->instance, &ad->machine);
+
+  return FALSE;
+}
+
+static LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
+  struct app_data_t *ad = (struct app_data_t *) GetWindowLongPtr(window, GWLP_USERDATA);
   switch (message)
   {
     case WM_COMMAND: 
       switch (LOWORD(wParam)) {
         case ID_DIAGNOSTICS_CHECKEREDPATTERN:
-          diag_checkered(&machine);
+          diag_checkered(&ad->machine);
           break;
         case ID_DIAGNOSTICS_FRAMEBUFFER_CLEARFRAMEBUFFER:
-          diag_clear(&machine);
+          diag_clear(&ad->machine);
           break;
         case ID_FILE_EXIT:
           SendMessage(window, WM_CLOSE, 0, 0);
           break;
+        case ID_TOOLS_DEBUGGER:
+          return on_debugger(window);
         default:
           return FALSE;
       };
@@ -233,7 +263,7 @@ LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPAR
   return FALSE;
 }
 
-void attach_statusbar(HWND window, HINSTANCE instance, int height) {
+static void attach_statusbar(HWND window, HINSTANCE instance, int height) {
   HWND status_window = CreateWindowEx(0, STATUSCLASSNAME, NULL, WS_CHILD | WS_VISIBLE,
       0, 0, 0, 0, window, NULL, instance, NULL);
   int parts[] = {200, 300, -1};
