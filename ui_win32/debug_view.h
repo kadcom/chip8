@@ -9,6 +9,8 @@ struct debug_view_t {
   HWND wnd;
   HWND main_window;
 
+  HWND dis_window;
+
   struct machine_t *m;
 };
 

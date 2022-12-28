@@ -1,0 +1,10 @@
+#ifndef CHIP8_WND_MESSAGES_H
+#define CHIP8_WND_MESSAGES_H
+
+#include <windows.h>
+
+#define CHIP8_MACHINE_FETCH_AND_EXECUTE (WM_USER + 1)
+#define CHIP8_DEBUG_WINDOW_OPENED       (WM_USER + 2)
+#define CHIP8_DEBUG_WINDOW_CLOSED       (WM_USER + 3)
+
+#endif //CHIP8_WND_MESSAGES_H

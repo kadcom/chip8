@@ -6,6 +6,8 @@
 #include "render.h"
 #include "resource.h"
 
+#include "wnd_messages.h"
+
 #include "diagnostics.h"
 #include "debug_view.h"
 
@@ -145,6 +147,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
   attach_statusbar(main_window, instance, status);
   init_debug_view(&app_data.debug_view, main_window, instance, &app_data.machine);
 
+  SetActiveWindow(main_window);
+
   SetWindowLongPtr(main_window, GWLP_USERDATA, (LONG) &app_data);
 
   for(;;) {
@@ -170,6 +174,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmdline, i
       if (app_data.renderer) {
         render_display(app_data.renderer, &app_data.machine);
       }
+
+      PostMessage(HWND_BROADCAST, CHIP8_MACHINE_FETCH_AND_EXECUTE, 0, 0);
     }
   }
 
@@ -229,8 +235,15 @@ static LRESULT on_debugger(HWND window) {
   return FALSE;
 }
 
+static LRESULT on_user_message(HWND window, UINT message, WPARAM wParam, LPARAM lParam);
+
 static LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
   struct app_data_t *ad = (struct app_data_t *) GetWindowLongPtr(window, GWLP_USERDATA);
+
+  if (message > WM_USER) {
+    return on_user_message(window, message, wParam, lParam);
+  }
+
   switch (message)
   {
     case WM_COMMAND: 
@@ -241,7 +254,7 @@ static LRESULT CALLBACK main_window_proc(HWND window, UINT message, WPARAM wPara
         case ID_DIAGNOSTICS_FRAMEBUFFER_CLEARFRAMEBUFFER:
           diag_clear(&ad->machine);
           break;
-        case ID_FILE_EXIT:
+        case ID_EMULATOR_EXIT:
           SendMessage(window, WM_CLOSE, 0, 0);
           break;
         case ID_TOOLS_DEBUGGER:
@@ -275,3 +288,20 @@ static void attach_statusbar(HWND window, HINSTANCE instance, int height) {
   GetClientRect(window, &rect);
   MoveWindow(status_window, 0, rect.bottom - height, rect.right, height, TRUE);
 }
+
+static LRESULT on_user_message(HWND window, UINT message, WPARAM wParam, LPARAM lParam) {
+  HMENU menu = GetMenu(window);
+
+  switch (message) {
+  case CHIP8_DEBUG_WINDOW_OPENED:
+    EnableMenuItem(menu, ID_TOOLS_DEBUGGER, MF_BYCOMMAND | MF_GRAYED);
+    break;
+  case CHIP8_DEBUG_WINDOW_CLOSED:
+    EnableMenuItem(menu, ID_TOOLS_DEBUGGER, MF_BYCOMMAND | MF_ENABLED);
+    break;
+  default:
+    return TRUE;
+  }
+
+  return FALSE;
+};

@@ -54,17 +54,15 @@ END
 
 IDM_MAIN_MENU MENU DISCARDABLE 
 BEGIN
-    POPUP "&File"
+    POPUP "&Emulator"
     BEGIN
-        MENUITEM "Open",                        ID_FILE_OPEN
-        MENUITEM "&Close",                      ID_FILE_CLOSE, GRAYED
+        MENUITEM "&Open ROM",                       ID_EMULATOR_ROM_OPEN
         MENUITEM SEPARATOR
-        MENUITEM "&Exit\tAlt+F4",               ID_FILE_EXIT
+        MENUITEM "&Exit\tAlt+F4",               ID_EMULATOR_EXIT
     END
     POPUP "&Tools"
     BEGIN
-        MENUITEM "&Disassembler",               ID_TOOLS_DEBUGGER
-        MENUITEM "&Memory Map",                 ID_TOOLS_MEMORYMAP
+        MENUITEM "&Debugger\tCtrl+D",           ID_TOOLS_DEBUGGER
     END
     POPUP "&Diagnostics"
     BEGIN
@@ -72,7 +70,7 @@ BEGIN
         BEGIN
             MENUITEM "Clear Framebuffer",           ID_DIAGNOSTICS_FRAMEBUFFER_CLEARFRAMEBUFFER
 
-            MENUITEM "&Check FB Debug",          ID_DIAGNOSTICS_CHECKEREDPATTERN
+            MENUITEM "&Check FB Debug",             ID_DIAGNOSTICS_CHECKEREDPATTERN
 
         END
     END
