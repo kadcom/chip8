@@ -145,8 +145,17 @@ static int disasm_inst(inst_t instruction, char *buf, size_t buf_len) {
         default:
           return chip8_err_invalid_instruction;
       };
+    case 0x9:
+      if (df.n != 0) {
+        return chip8_err_invalid_instruction;
+      }
+      snprintf(buf, buf_len, "sne\tV%X, 0xV%X", df.x, df.y);
+      break;
     case 0xA:
       snprintf(buf, buf_len, "ld\tI, 0x%04x", df.nnn);
+      break;
+    case 0xB: 
+      snprintf(buf, buf_len, "jp\tV0, 0x%04x", df.nnn);
       break;
     case 0xD:
       snprintf(buf, buf_len, "drw\tV%X, V%X, 0x%x", df.x, df.y, df.n);
