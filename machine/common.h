@@ -1,61 +1,66 @@
 #ifndef CHIP8_TYPES_H
 #define CHIP8_TYPES_H
 
-/* compatibility with older msvc */
-#if defined(_MSC_VER) && (_MSC_VER <= 1400)
-
-#ifndef inline 
-#define inline __inline
-#endif 
-
-#ifndef snprintf 
-#define snprintf _snprintf 
-#endif
-
-#if (_MSC_VER <= 1200)
-#define _U64(x) x##ui64
-#define INLINE_U64_MACRO (_inline unsigned __int64)
-#define INLINE_U32_MACRO (_inline unsigned __int32)
-#define INLINE_U16_MACRO (_inline unsigned __int16)
-#else
-#define INLINE_U64_MACRO (unsigned __int64)
-#define INLINE_U32_MACRO (unsigned __int32)
-#define INLINE_U16_MACRO (unsigned __int16)
-#define _U64(x) x##ull
-#endif
-#else
-#define INLINE_U32_MACRO
-#define INLINE_U16_MACRO
-#define INLINE_U64_MACRO
-#define _U64(x) x##ull
-#endif
-
 #if (defined(_MSC_VER) || defined(__WATCOMC__)) && (defined(WIN32) || defined(_WIN32))
-#include <windows.h>
-typedef unsigned __int8  u8;
-typedef unsigned __int16 u16;
-typedef unsigned __int32 u32; 
-typedef unsigned __int64 u64;
+  #include <windows.h>
+  typedef unsigned __int8  u8;
+  typedef unsigned __int16 u16;
+  typedef unsigned __int32 u32; 
+  typedef unsigned __int64 u64;
 
-#define UNUSED
-#define UNUSED_PARAM(p) ((p))
-#define PACKED
-#define CHIP8_CALLBACK __stdcall
+  #define UNUSED
+  #define UNUSED_PARAM(p) ((p))
+  #define PACKED
+  #define CHIP8_CALLBACK __stdcall
+
+  #if defined (_MSC_VER)
+
+    #if (_MSC_VER <= 1200)
+      #define _U64(x) x##ui64
+      #define INLINE_U64_MACRO (_inline u64)
+      #define INLINE_U32_MACRO (_inline u32)
+      #define INLINE_U16_MACRO (_inline u16)
+    #else
+      #define INLINE_U64_MACRO (u64)
+      #define INLINE_U32_MACRO (u32)
+      #define INLINE_U16_MACRO (u16)
+      #define _U64(x) x##ull
+    #endif // _MSC_VER < 1200
+
+    #if (_MSC_VER <= 1400)
+
+      #ifndef inline 
+        #define inline __inline
+      #endif 
+
+      #ifndef snprintf 
+        #define snprintf _snprintf 
+      #endif
+
+    #endif // _MSC_VER < 1400
+  #endif // _MSC_VER
+
 #else 
-#include <stdint.h>
-typedef uint8_t u8;
-typedef uint16_t u16;
-typedef uint32_t u32;
-typedef uint64_t u64;
+  #include <stdint.h>
+  typedef uint8_t u8;
+  typedef uint16_t u16;
+  typedef uint32_t u32;
+  typedef uint64_t u64;
+
+  #define INLINE_U32_MACRO
+  #define INLINE_U16_MACRO
+  #define INLINE_U64_MACRO
+  #define _U64(x) x##ull
 #endif
+
 
 #include <stdlib.h>
 
 #if defined(__GNUC__) || defined(__clang__)
-#define UNUSED __attribute__((unused))
-#define UNUSED_PARAM(p)
-#define CHIP8_CALLBACK
-#define PACKED __attribute__((packed))
+  #define UNUSED __attribute__((unused))
+  #define UNUSED_PARAM(p)
+  #define CHIP8_CALLBACK
+  #define PACKED __attribute__((packed))
 #endif
 
 #define FLIP_ENDIANNESS_32(value) \
@@ -89,7 +94,6 @@ typedef uint64_t u64;
 
 #define ROTR64(v,n) ROT64((v), (n), DIR_RIGHT)
 #define ROTL64(v,n) ROT64((v), (n), DIR_LEFT)
-
 
 #endif /* CHIP8_TYPES_H */
 

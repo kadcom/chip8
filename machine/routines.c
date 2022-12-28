@@ -109,7 +109,7 @@ static void CHIP8_CALLBACK reg_shl(struct machine_t *m, struct inst_field_t f) {
 }
 
 
-static void reg_subn(struct machine_t *m, struct inst_field_t f) {
+static void CHIP8_CALLBACK reg_subn(struct machine_t *m, struct inst_field_t f) {
   m->cpu.VF = (m->cpu.V[f.y] > m->cpu.V[f.x]);
   m->cpu.V[f.x] = m->cpu.V[f.y] - m->cpu.V[f.x];
 }
