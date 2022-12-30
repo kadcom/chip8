@@ -5,16 +5,17 @@
 #include "resource.h"
 #include "wnd_messages.h"
 
+#include "disasm_view.h"
+
 static LRESULT CALLBACK dbg_view_proc(HWND, UINT, WPARAM, LPARAM);
 static char dbg_view_class[] = "DebugViewWindowClass";
 
 static int debug_view_shown = 0;
 
-#define debug_view_width  600 
+#define debug_view_width  400 
 #define debug_view_height 600
 
 static void show_disassembler(struct debug_view_t *dbgview);
-static HWND create_disasm_view(struct debug_view_t *dbgview);
 
 int init_debug_view(struct debug_view_t *dbgview, HWND main_window, HINSTANCE instance, struct machine_t *m) {
   WNDCLASSEX wcex;
@@ -89,13 +90,13 @@ registered:
   dbgview->main_window = main_window;
   dbgview->wnd = wnd;
   dbgview->m = m;
+  dbgview->instance = instance;
 
   if (!debug_view_shown) {
     debug_view_shown = TRUE;
   }
 
-
-  create_disasm_view(dbgview);
+  create_disasm_view(&dbgview->dv, instance, wnd, 0, 0, debug_view_width, debug_view_height, m);
 
   PostMessage(main_window, CHIP8_DEBUG_WINDOW_OPENED, 0, 0);
 

@@ -197,7 +197,7 @@ cleanup:
 static LRESULT on_close(HWND window) {
   struct app_data_t *ad = (struct app_data_t *) GetWindowLongPtr(window, GWLP_USERDATA);
 
-  int res = MessageBox(NULL, "Are you sure?", "Confirmation", MB_YESNO | MB_ICONQUESTION);
+  int res = MessageBox(window, "Are you sure you want to quit?", "Confirmation", MB_YESNO | MB_ICONQUESTION);
 
   if (IDYES == res) {
     if (ad->renderer) {

@@ -3,14 +3,17 @@
 
 #include <windows.h>
 
+#include "disasm_view.h"
+
 struct machine_t;
 
 struct debug_view_t {
   HWND wnd;
   HWND main_window;
 
-  HWND dis_window;
+  HINSTANCE instance;
 
+  struct chip8_disasm_view_t dv;
   struct machine_t *m;
 };
 

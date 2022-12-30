@@ -27,7 +27,7 @@
       #define _U64(x) x##ull
     #endif // _MSC_VER < 1200
 
-    #if (_MSC_VER <= 1500)
+    #if (_MSC_VER <= 1600)
 
       #ifndef inline 
         #define inline __inline
